@@ -248,22 +248,15 @@ class AccFSS:
         return linhas
 
 
-def _integral(campo_bin):
-    return np.pad(np.cumsum(np.cumsum(campo_bin, axis=0), axis=1),
-                  ((1, 0), (1, 0)), mode="constant")
-
-
 def _fracoes(campo_bin, n):
-    S = _integral(campo_bin)
-    H, W = campo_bin.shape
-    out = np.empty_like(campo_bin, dtype=float)
-    for i in range(H):
-        i0, i1 = max(0, i - n), min(H, i + n + 1)
-        for j in range(W):
-            j0, j1 = max(0, j - n), min(W, j + n + 1)
-            soma = S[i1, j1] - S[i0, j1] - S[i1, j0] + S[i0, j0]
-            out[i, j] = soma / ((i1 - i0) * (j1 - j0))
-    return out
+    """Fracao de pixels excedentes na vizinhanca quadrada (2n+1).
+    Vetorizado com uniform_filter (rapido em C) - essencial para grades grandes.
+    Fora do dominio conta como 0 (seco), convencao padrao de Roberts & Lean."""
+    if n <= 0:
+        return np.asarray(campo_bin, dtype=float)
+    from scipy.ndimage import uniform_filter
+    return uniform_filter(np.asarray(campo_bin, dtype=float),
+                          size=2 * n + 1, mode="constant", cval=0.0)
 
 
 def scores_par_continuo(p, o):

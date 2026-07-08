@@ -1,0 +1,61 @@
+#!/bin/bash
+#PBS -N verif_eta
+#PBS -q pesq
+#PBS -l select=1:ncpus=8:mem=32gb
+#PBS -l walltime=02:00:00
+#PBS -j oe
+#PBS -o verif_eta.log
+# ==========================================================================
+# Submissao da verificacao de precipitacao 24h (Eta jaci/XC50 vs MERGE).
+#
+#   qsub submit_verifica_eta.pbs
+#
+# Ajuste conforme seu ambiente:
+#   -q       .... fila (ex.: pesq, batch, route...)
+#   select   .... nos:cpus:memoria (o script usa 1 no; FSS/regrid ~1-poucos cores)
+#   walltime .... o processamento e' rapido (poucos min); I/O do lustre domina
+# ==========================================================================
+
+# ---- diretorios ----------------------------------------------------------
+WORKDIR=/lustre/projetos/grpeta/Team/jorge.gomes/Verif-prec
+BASE=/lustre/projetos/grpeta/Team/jorge.gomes/convert2nc
+SAIDA=$WORKDIR/resultados_eta
+
+cd "$WORKDIR" || { echo "WORKDIR nao encontrado"; exit 1; }
+
+# ---- ambiente Python -----------------------------------------------------
+# Use UMA das opcoes abaixo (descomente a que se aplica ao seu ambiente):
+
+# (a) modulo do sistema
+# module load python/3.11    # ajuste a versao disponivel (module avail python)
+
+# (b) conda/miniconda
+# source ~/miniconda3/etc/profile.d/conda.sh
+# conda activate meu_env     # ambiente com numpy pandas xarray scipy netCDF4 matplotlib
+
+# Verifica dependencias (falha cedo com mensagem clara)
+python -c "import numpy,pandas,xarray,scipy,netCDF4,matplotlib" 2>/dev/null \
+  || { echo "ERRO: faltam dependencias. Rode: pip install --user numpy pandas xarray scipy netCDF4 matplotlib"; exit 1; }
+
+# threads das libs numericas (evita oversubscription; o gargalo nao e' CPU)
+export OMP_NUM_THREADS=${NCPUS:-4}
+export OPENBLAS_NUM_THREADS=$OMP_NUM_THREADS
+export MPLBACKEND=Agg
+
+# ---- execucao ------------------------------------------------------------
+echo "Inicio: $(date)"
+echo "Host:   $(hostname)"
+echo "BASE:   $BASE"
+echo "SAIDA:  $SAIDA"
+
+python verifica_eta.py \
+    --base "$BASE" \
+    --saida "$SAIDA" \
+    --janelas 12 0 \
+    --limiares 1 10 25 50 \
+    --escalas-fss 1 3 5 11 \
+    --metodo-regrid linear
+
+RC=$?
+echo "Fim: $(date)  (codigo de saida=$RC)"
+exit $RC
