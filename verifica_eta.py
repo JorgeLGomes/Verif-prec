@@ -512,6 +512,10 @@ class Mapas:
             mp = np.where(self.n > 0, self.sp / self.n, np.nan)
             mo = np.where(self.n > 0, self.so / self.n, np.nan)
             mb = np.where(self.n > 0, self.sdif / self.n, np.nan)
+        # orienta pela latitude: origin='lower' exige linha 0 = lat minima (sul).
+        # Se a grade vem norte->sul (lat decrescente), inverte as linhas.
+        if self.grade.lats[0] > self.grade.lats[-1]:
+            mp, mo, mb = mp[::-1], mo[::-1], mb[::-1]
         ext = [self.grade.lons.min(), self.grade.lons.max(),
                self.grade.lats.min(), self.grade.lats.max()]
         vmax = np.nanpercentile(np.concatenate(

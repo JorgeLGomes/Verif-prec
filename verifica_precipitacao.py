@@ -365,11 +365,15 @@ def salva_figuras(prev: Campo, obs: Campo, saida: str):
     vmax = float(np.nanpercentile(validos, 99)) if validos.size else 1.0
     if not np.isfinite(vmax) or vmax <= 0:
         vmax = 1.0
+    # orienta pela latitude: origin='lower' exige linha 0 = lat minima (sul).
+    obs_d, prev_d, dif_d = obs.dados, prev.dados, dif
+    if obs.lats[0] > obs.lats[-1]:
+        obs_d, prev_d, dif_d = obs_d[::-1], prev_d[::-1], dif_d[::-1]
     fig, ax = plt.subplots(1, 3, figsize=(16, 4.2))
     for a, campo, tit, cmap, vlim in [
-        (ax[0], obs.dados, "Observado (24h)", "Blues", (0, vmax)),
-        (ax[1], prev.dados, "Previsto (24h)", "Blues", (0, vmax)),
-        (ax[2], dif, "Previsto - Observado", "RdBu_r", (-vmax, vmax)),
+        (ax[0], obs_d, "Observado (24h)", "Blues", (0, vmax)),
+        (ax[1], prev_d, "Previsto (24h)", "Blues", (0, vmax)),
+        (ax[2], dif_d, "Previsto - Observado", "RdBu_r", (-vmax, vmax)),
     ]:
         im = a.imshow(campo, origin="lower", extent=ext, aspect="auto",
                       cmap=cmap, vmin=vlim[0], vmax=vlim[1])
