@@ -59,6 +59,7 @@ from __future__ import annotations
 import argparse
 import glob
 import os
+import pickle
 import re
 import sys
 from dataclasses import dataclass
@@ -632,13 +633,16 @@ def executa(args):
     obs.close()
 
     # ---------------- saidas ----------------
-    _salva_placar(acc_modelo, os.path.join(args.saida, "placar_por_modelo.csv"))
-    _salva_placar(acc_lead, os.path.join(args.saida, "scores_por_prazo.csv"))
+    df_mod, df_mod_fss = _salva_placar(
+        acc_modelo, os.path.join(args.saida, "placar_por_modelo.csv"))
+    df_prz, df_prz_fss = _salva_placar(
+        acc_lead, os.path.join(args.saida, "scores_por_prazo.csv"))
+    df_rod = None
     if linhas_par:
-        dfp = pd.DataFrame(linhas_par)
-        dfp.to_csv(os.path.join(args.saida, "scores_por_rodada.csv"),
-                   index=False)
-        print(f"\nscores_por_rodada.csv: {len(dfp)} pares (rodada x prazo x janela)")
+        df_rod = pd.DataFrame(linhas_par)
+        df_rod.to_csv(os.path.join(args.saida, "scores_por_rodada.csv"),
+                      index=False)
+        print(f"\nscores_por_rodada.csv: {len(df_rod)} pares (rodada x prazo x janela)")
     else:
         print("\n[aviso] nenhum par previsao/observacao foi casado. "
               "Rode --inspecionar para conferir nomes/tempos.")
@@ -649,12 +653,32 @@ def executa(args):
                 mp.salva(os.path.join(args.saida, f"mapas_{modelo}.png"),
                          f"Verificacao 24h - modelo {modelo} (grade MERGE 10km)")
 
+    # ---- binario com TUDO para regerar figuras depois (sem reler NetCDF) ----
+    if not args.sem_binario:
+        binario = {
+            "grade": {"lats": obs.lats, "lons": obs.lons},
+            "config": {"janelas": horas, "limiares": list(args.limiares),
+                       "escalas_fss": list(args.escalas_fss)},
+            "mapas": {m: {"sp": mp.sp, "so": mp.so, "sdif": mp.sdif, "n": mp.n}
+                      for m, mp in mapas.items()},
+            "tabelas": {
+                "placar_modelo": df_mod, "placar_modelo_fss": df_mod_fss,
+                "scores_prazo": df_prz, "scores_prazo_fss": df_prz_fss,
+                "scores_rodada": df_rod},
+        }
+        cam_bin = os.path.join(args.saida, "verificacao.pkl")
+        with open(cam_bin, "wb") as f:
+            pickle.dump(binario, f, protocol=pickle.HIGHEST_PROTOCOL)
+        print(f"binario salvo: {cam_bin}  "
+              f"(use: python gera_figuras.py --binario {cam_bin})")
+
     print(f"\nResultados em: {os.path.abspath(args.saida)}")
     return 0
 
 
 def _salva_placar(dic, caminho):
-    """Consolida acumuladores em um CSV largo (continuas+categoricas+FSS)."""
+    """Consolida acumuladores em CSVs (continuas+categoricas e FSS).
+    Retorna (df_scores, df_fss) para reaproveitamento no binario."""
     linhas = []
     for chave, a in sorted(dic.items()):
         base = dict(a["tag"])
@@ -665,7 +689,7 @@ def _salva_placar(dic, caminho):
             linha.update(cat)
             linhas.append(linha)
     if not linhas:
-        return
+        return None, None
     df = pd.DataFrame(linhas)
     df.to_csv(caminho, index=False)
     print(f"{os.path.basename(caminho)}: {len(df)} linhas")
@@ -676,10 +700,13 @@ def _salva_placar(dic, caminho):
             continue
         for r in a["fss"].scores():
             fss_linhas.append({**a["tag"], **r})
+    df_fss = None
     if fss_linhas:
+        df_fss = pd.DataFrame(fss_linhas)
         cam_fss = caminho.replace(".csv", "_fss.csv")
-        pd.DataFrame(fss_linhas).to_csv(cam_fss, index=False)
-        print(f"{os.path.basename(cam_fss)}: {len(fss_linhas)} linhas")
+        df_fss.to_csv(cam_fss, index=False)
+        print(f"{os.path.basename(cam_fss)}: {len(df_fss)} linhas")
+    return df, df_fss
 
 
 def parser():
@@ -702,6 +729,8 @@ def parser():
     p.add_argument("--metodo-regrid", choices=["linear", "nearest"],
                    default="linear")
     p.add_argument("--sem-mapas", action="store_true")
+    p.add_argument("--sem-binario", action="store_true",
+                   help="nao salvar verificacao.pkl (binario para regerar figuras)")
     p.add_argument("--inspecionar", metavar="ARQ.nc", default=None,
                    help="apenas imprime a estrutura do arquivo e sai")
     return p
