@@ -100,8 +100,9 @@ def plota_continuas(df, janela, saida):
 
 
 def plota_categoricas(df, janela, saida):
-    metricas = [("POD", "POD"), ("FAR", "FAR"), ("CSI", "CSI"),
-                ("ETS", "ETS"), ("HSS", "HSS"), ("FBIAS", "Vies de freq.")]
+    # layout 2x3: ETS no centro-topo e BIAS logo abaixo (centro-base)
+    metricas = [("POD", "POD"), ("ETS", "ETS"), ("CSI", "CSI"),
+                ("FAR", "FAR"), ("FBIAS", "BIAS"), ("HSS", "HSS")]
     modelos = sorted(df.modelo.unique())
     limiares = sorted(df.limiar_mm.unique())
     cor = _cores_limiar(limiares)
