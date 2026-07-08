@@ -720,7 +720,8 @@ def parser():
                    default=None, help="quais modelos verificar (padrao: todos)")
     p.add_argument("--janelas", type=int, nargs="+", default=[12, 0],
                    help="horas finais das janelas de 24h (12=12Z-12Z, 0=00Z-00Z)")
-    p.add_argument("--limiares", type=float, nargs="+", default=[1, 10, 25, 50])
+    p.add_argument("--limiares", type=float, nargs="+",
+                   default=[0.254, 2.54, 6.35, 12.7, 19.05, 25.4, 38.1, 50])
     p.add_argument("--escalas-fss", type=int, nargs="*", default=[1, 3, 5])
     p.add_argument("--max-lead", type=int, default=0,
                    help="prazo maximo em dias (0 = todos)")

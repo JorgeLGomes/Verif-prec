@@ -467,7 +467,7 @@ def constroi_parser() -> argparse.ArgumentParser:
     p.add_argument("--tempo-obs", type=int, default=None,
                    help="indice de tempo a extrair da observacao (se houver)")
     p.add_argument("--limiares", type=float, nargs="+",
-                   default=[1, 10, 25, 50],
+                   default=[0.254, 2.54, 6.35, 12.7, 19.05, 25.4, 38.1, 50],
                    help="limiares (mm/24h) para as metricas categoricas e FSS")
     p.add_argument("--escalas-fss", type=int, nargs="*",
                    default=[1, 3, 5, 11],
