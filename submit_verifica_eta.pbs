@@ -1,8 +1,8 @@
 #!/bin/bash
 #PBS -N verif_eta
-#PBS -q pesq
+#PBS -q pesqmidi
 #PBS -l select=1:ncpus=8:mem=32gb
-#PBS -l walltime=02:00:00
+#PBS -l walltime=01:00:00
 #PBS -j oe
 #PBS -o verif_eta.log
 # ==========================================================================
@@ -17,8 +17,8 @@
 # ==========================================================================
 
 # ---- diretorios ----------------------------------------------------------
-WORKDIR=/lustre/projetos/grpeta/Team/jorge.gomes/Verif-prec
-BASE=/lustre/projetos/grpeta/Team/jorge.gomes/convert2nc
+WORKDIR=/p/projetos/grpeta/Team/jorge.gomes/Verif-prec
+BASE=/p/projetos/grpeta/Team/jorge.gomes/convert2nc
 SAIDA=$WORKDIR/resultados_eta
 
 cd "$WORKDIR" || { echo "WORKDIR nao encontrado"; exit 1; }
