@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Dados (nao versionar NetCDF/GRIB pesados)
+*.nc
+*.nc4
+*.grib
+*.grib2
+*.grb2
+*.tif
+*.tiff
+
+# Saidas de verificacao
+resultados_*/
+res_*/
+*.png
+*.csv
+
+# Sistema
+.DS_Store
+.ipynb_checkpoints/
