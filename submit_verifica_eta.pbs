@@ -52,7 +52,7 @@ python verifica_eta.py \
     --base "$BASE" \
     --saida "$SAIDA" \
     --janelas 12 0 \
-    --limiares 1 10 25 50 \
+    --limiares 0.254 2.54 6.35 12.7 19.05 25.4 38.1 50 \
     --escalas-fss 1 3 5 11 \
     --metodo-regrid linear
 
